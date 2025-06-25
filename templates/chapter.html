@@ -1,0 +1,39 @@
+<!-- templates/chapter.html -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ chapter.title }} - {{ book.title }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>{{ book.title }}</h1>
+        <h2>{{ chapter.title }}</h2>
+        <nav>
+            <a href="{{ url_for('book_page', book_id=book.id) }}">← К оглавлению</a>
+            <a href="{{ url_for('library') }}">Библиотека</a>
+        </nav>
+    </header>
+
+    <main>
+        <div class="sidebar" id="commentary-sidebar">
+            <div class="sidebar-content">
+                <h3>Комментарий</h3>
+                <p id="comment-text"></p>
+            </div>
+            <button class="close-btn" id="close-sidebar">×</button>
+        </div>
+
+        <div class="chapter-content">
+            {% for section in chapter.sections %}
+            <div class="text-section" data-comment="{{ section.comment }}">
+                {{ section.content|safe }}
+            </div>
+            {% endfor %}
+        </div>
+    </main>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

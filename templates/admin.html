@@ -1,0 +1,117 @@
+<!-- templates/admin.html -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Администрирование</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header>
+    <h1>Администрирование Библиотеки</h1>
+    <nav>
+        <a href="{{ url_for('library') }}">Библиотека</a>
+    </nav>
+</header>
+
+<main class="admin-container">
+    <section class="admin-form">
+        <h2>Добавить новую книгу</h2>
+        <form action="{{ url_for('new_book') }}" method="POST">
+            <input type="text" name="title" placeholder="Название книги" required>
+            <input type="text" name="author" placeholder="Автор" required>
+            <button type="submit">Добавить книгу</button>
+        </form>
+    </section>
+
+    <section class="admin-form">
+        <h2>Добавить главу в книгу</h2>
+        <form action="{{ url_for('new_chapter') }}" method="POST">
+            <select name="book_id" required>
+                <option value="">Выберите книгу</option>
+                {% for book in library %}
+                    <option value="{{ book.id }}">{{ book.title }} ({{ book.author }})</option>
+                {% endfor %}
+            </select>
+            <input type="text" name="title" placeholder="Название главы" required>
+            <button type="submit">Добавить главу</button>
+        </form>
+    </section>
+
+    <section class="admin-form">
+        <h2>Добавить фрагмент текста</h2>
+        <form action="{{ url_for('new_section') }}" method="POST">
+            <select name="book_id" id="book-select" required>
+                <option value="">Выберите книгу</option>
+                {% for book in library %}
+                    <option value="{{ book.id }}">{{ book.title }}</option>
+                {% endfor %}
+            </select>
+
+            <select name="chapter_id" id="chapter-select" required disabled>
+                <option value="">Сначала выберите книгу</option>
+            </select>
+
+            <textarea name="content" placeholder="Текст фрагмента" rows="3" required></textarea>
+            <textarea name="comment" placeholder="Комментарий/анализ" rows="3"></textarea>
+            <button type="submit">Добавить фрагмент</button>
+        </form>
+    </section>
+</main>
+
+<script>
+    // Динамическая загрузка глав при выборе книги
+    document.getElementById('book-select').addEventListener('change', function () {
+        const bookId = this.value;
+        const chapterSelect = document.getElementById('chapter-select');
+        localStorage.setItem('last_book_id', bookId); // Сохраняем книгу
+
+        if (!bookId) {
+            chapterSelect.disabled = true;
+            chapterSelect.innerHTML = '<option value="">Сначала выберите книгу</option>';
+            localStorage.removeItem('last_chapter_id'); // Очищаем главу
+            return;
+        }
+
+        // Загружаем главы для выбранной книги
+        fetch(`/admin/get_chapters?book_id=${bookId}`)
+            .then(response => response.json())
+            .then(chapters => {
+                chapterSelect.disabled = false;
+                chapterSelect.innerHTML = '<option value="">Выберите главу</option>';
+
+                chapters.forEach(chapter => {
+                    const option = document.createElement('option');
+                    option.value = chapter.id;
+                    option.textContent = chapter.title || `Глава ${chapter.id}`;
+                    chapterSelect.appendChild(option);
+                });
+
+                // После загрузки глав пытаемся восстановить выбор
+                const lastChapterId = localStorage.getItem('last_chapter_id');
+                if (lastChapterId && bookId === localStorage.getItem('last_book_id')) {
+                    chapterSelect.value = lastChapterId;
+                }
+            });
+    });
+
+    // Сохраняем выбор главы
+    document.getElementById('chapter-select').addEventListener('change', function () {
+        localStorage.setItem('last_chapter_id', this.value);
+    });
+
+    // Восстанавливаем выбор при загрузке страницы
+    document.addEventListener('DOMContentLoaded', () => {
+        const lastBookId = localStorage.getItem('last_book_id');
+        if (lastBookId) {
+            const bookSelect = document.getElementById('book-select');
+            bookSelect.value = lastBookId;
+
+            // Триггерим загрузку глав
+            const event = new Event('change');
+            bookSelect.dispatchEvent(event);
+        }
+    });
+</script>
+</body>
+</html>

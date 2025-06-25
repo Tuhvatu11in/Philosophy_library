@@ -1,0 +1,34 @@
+<!-- templates/book.html -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ book.title }} - {{ book.author }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>{{ book.title }}</h1>
+        <h2>{{ book.author }}</h2>
+        <nav>
+            <a href="{{ url_for('library') }}">Библиотека</a>
+            <a href="{{ url_for('admin_panel') }}">Админ-панель</a>
+        </nav>
+    </header>
+
+    <main>
+        <div class="chapters-container">
+            <h3>Оглавление</h3>
+            <ul class="chapters-list">
+                {% for chapter in book.chapters %}
+                <li>
+                    <a href="{{ url_for('chapter_page', book_id=book.id, chapter_id=chapter.id) }}">
+                        Глава {{ loop.index }}. {{ chapter.title }}
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </main>
+</body>
+</html>
